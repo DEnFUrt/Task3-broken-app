@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize');
-const dotenv = require('dotenv');
+const dotenv = require('dotenv'); 
 const path = require('path');
+const Op = Sequelize.Op; //рефактор 
 
 dotenv.config({
     path: path.join(__dirname, '/.env')
@@ -14,7 +15,9 @@ const database = process.env.DB;
                                 //database username   password
 const sequelize = new Sequelize(database, username, password, {
     host: host,
-    dialect: 'postgres'
+    dialect: 'postgres',
+    operatorsAliases: Op, //рефактор
+    logging: false
 })
 
 sequelize.authenticate().then(
