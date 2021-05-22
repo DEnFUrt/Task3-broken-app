@@ -5,47 +5,61 @@ var jwt = require('jsonwebtoken');
 var User = require('../db').import('../models/user');
 
 router.post('/signup', (req, res) => {
+    const { full_name, username, password, email } = req.body.user;
+
+    if (!password) {
+        res.status(400).send('Bad request: user password is not null');
+        return;
+    };
+
     User.create({
-        full_name: req.body.user.full_name,
-        username: req.body.user.username,
-        passwordHash: bcrypt.hashSync(req.body.user.password, 10), //Если не найду 5 ошибок эта будет логической, отсутсвие валидации на null
-        email: req.body.user.email,
+        full_name: full_name,
+        username: username,
+        passwordHash: bcrypt.hashSync(password, 10), 
+        email: email,
     })
         .then(
-            function signupSuccess(user) {
-                let token = jwt.sign({ id: user.id }, 'lets_play_sum_games_man', { expiresIn: 60 * 60 * 24 });
+            user => {
+                const token = jwt.sign({ id: user.id }, 'lets_play_sum_games_man', { expiresIn: 60 * 60 * 24 });
                 res.status(200).json({
                     user: user,
                     token: token
-                })
-            },
-
-            function signupFail(err) {
-                res.status(500).send(err.message)
-            }
-        )
-})
+                });
+            })
+        .catch(
+            err => res.status(500).send(err.message)
+            );
+});
 
 router.post('/signin', (req, res) => {
-    User.findOne({ where: { username: req.body.user.username } }).then(user => {
-        if (user) {
-            bcrypt.compare(req.body.user.password, user.passwordHash, function (err, matches) {
-                if (matches) {
-                    var token = jwt.sign({ id: user.id }, 'lets_play_sum_games_man', { expiresIn: 60 * 60 * 24 });
-                    res.json({
-                        user: user,
-                        message: "Successfully authenticated.",
-                        sessionToken: token
-                    });
-                } else {
-                    res.status(502).send({ error: "Passwords do not match." })
-                }
-            });
-        } else {
-            res.status(403).send({ error: "User not found." })
-        }
+    const { username, password } = req.body.user;
 
-    })
-})
+    User.findOne(
+            { 
+                where: { username: username } 
+            }
+        )
+        .then(user => {
+            if (user) {
+                bcrypt.compare(password, user.passwordHash, function (err, matches) {
+                    if (matches) {
+                        const token = jwt.sign({ id: user.id }, 'lets_play_sum_games_man', { expiresIn: 60 * 60 * 24 });
+                        res.json({
+                            user: user,
+                            message: 'Successfully authenticated.',
+                            sessionToken: token
+                        });
+                    } else {
+                        res.status(502).send({ error: 'Passwords do not match.' });
+                    };
+                });
+            } else {
+                res.status(403).send({ error: 'User not found.' });
+            };
+        })
+        .catch(
+            err => res.status(500).send(err.message)
+            );
+});
 
 module.exports = router;
