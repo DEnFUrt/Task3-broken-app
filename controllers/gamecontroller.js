@@ -1,5 +1,6 @@
-var router = require('express').Router();
-var Game = require('../db').import('../models/game');
+const router = require('express').Router();
+const StatusCodes = require('http-status-codes');
+const Game = require('../db').import('../models/game');
 
 router.get('/all', (req, res) => {
     Game.findAll(
@@ -9,7 +10,7 @@ router.get('/all', (req, res) => {
     ) 
     .then(
         games => { 
-            res.status(200).json(
+            res.status(StatusCodes.OK).json(
                 {
                     games: games, 
                     message: 'Data fetched.'
@@ -18,7 +19,7 @@ router.get('/all', (req, res) => {
         },
     )
     .catch(
-        () => res.status(500).json({ message: 'Data not found' })
+        () => res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Data not found' })
     );
 });
 
@@ -29,10 +30,10 @@ router.get('/:id', (req, res) => {
         }
     )
     .then(
-        game => res.status(200).json({ game: game })
+        game => res.status(StatusCodes.OK).json({ game: game })
     )
     .catch(
-        () => res.status(500).json({ message: 'Data not found.' })
+        () => res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Data not found.' })
     );
 });
 
@@ -50,14 +51,14 @@ router.post('/create', (req, res) => {
         }
     )
     .then(
-        (game) => res.status(200).json(
+        (game) => res.status(StatusCodes.OK).json(
             {
                 game: game,
                 message: 'Game created.'
             })
     )
     .catch(
-        err => res.status(500).send(err.message)
+        err => res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(err.message)
     );
 });
 
@@ -79,14 +80,14 @@ router.put('/update/:id', (req, res) => {
         }
     )
     .then(
-        game => res.status(200).json(
+        game => res.status(StatusCodes.OK).json(
             {
                 game: game,
                 message: 'Successfully updated.'
             })
     )
     .catch(
-        err => res.status(500).json({ message: err.message })
+        err => res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: err.message })
     );
 });
 
@@ -98,14 +99,14 @@ router.delete('/remove/:id', (req, res) => {
         }
     })
     .then(
-        game => res.status(200).json(
+        game => res.status(StatusCodes.OK).json(
             {
                 game: game,
                 message: 'Successfully deleted'
             })
     )
     .catch(
-        err => res.status(500).json({ error: err.message })
+        err => res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message })
     );
 });
 

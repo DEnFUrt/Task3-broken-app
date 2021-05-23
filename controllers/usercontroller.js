@@ -1,14 +1,15 @@
-var router = require('express').Router();
-var bcrypt = require('bcryptjs');
-var jwt = require('jsonwebtoken');
+const router = require('express').Router();
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const StatusCodes = require('http-status-codes');
 
-var User = require('../db').import('../models/user');
+const User = require('../db').import('../models/user');
 
 router.post('/signup', (req, res) => {
     const { full_name, username, password, email } = req.body.user;
 
     if (!password) {
-        res.status(400).send('Bad request: user password is not null');
+        res.status(StatusCodes.BAD_REQUEST).send('Bad request: user password cannot be empty');
         return;
     };
 
@@ -21,13 +22,13 @@ router.post('/signup', (req, res) => {
         .then(
             user => {
                 const token = jwt.sign({ id: user.id }, 'lets_play_sum_games_man', { expiresIn: 60 * 60 * 24 });
-                res.status(200).json({
+                res.status(StatusCodes.OK).json({
                     user: user,
                     token: token
                 });
             })
         .catch(
-            err => res.status(500).send(err.message)
+            err => res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(err.message)
             );
 });
 
@@ -44,21 +45,21 @@ router.post('/signin', (req, res) => {
                 bcrypt.compare(password, user.passwordHash, function (err, matches) {
                     if (matches) {
                         const token = jwt.sign({ id: user.id }, 'lets_play_sum_games_man', { expiresIn: 60 * 60 * 24 });
-                        res.json({
+                        res.status(StatusCodes.OK).json({
                             user: user,
                             message: 'Successfully authenticated.',
                             sessionToken: token
                         });
                     } else {
-                        res.status(502).send({ error: 'Passwords do not match.' });
+                        res.status(StatusCodes.BAD_GATEWAY).send({ error: 'Passwords do not match.' });
                     };
                 });
             } else {
-                res.status(403).send({ error: 'User not found.' });
+                res.status(StatusCodes.FORBIDDEN).send({ error: 'User not found.' });
             };
         })
         .catch(
-            err => res.status(500).send(err.message)
+            err => res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(err.message)
             );
 });
 
